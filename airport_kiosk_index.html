@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Airport Self Check-In Kiosk</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .kiosk {
+      width: 380px;
+      height: 680px;
+      background: #020617;
+      border-radius: 28px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+    }
+    .brand { text-align: center; font-weight: 700; font-size: 20px; margin-bottom: 4px; }
+    .brand.indigo { color: #4f46e5; }
+    .brand.airindia { color: #dc2626; }
+    .flight-bar { font-size: 12px; text-align: center; color: #38bdf8; margin-bottom: 8px; }
+    .screen { flex: 1; overflow-y: auto; }
+    h2 { text-align: center; margin-bottom: 12px; }
+    .btn { width: 100%; padding: 14px; margin: 10px 0; border: none; border-radius: 12px; background: #2563eb; color: white; font-size: 16px; cursor: pointer; }
+    .btn.red { background: #dc2626; }
+    .btn.secondary { background: #334155; }
+    input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; font-size: 15px; }
+    .hidden { display: none; }
+    .card { background:#020617; border:1px dashed #38bdf8; border-radius:14px; padding:14px; margin-top:12px; font-size:14px; }
+    ul { padding-left:18px; }
+  </style>
+</head>
+<body>
+<div class="kiosk">
+  <div id="brand" class="brand indigo">IndiGo Airlines</div>
+  <div id="flightBar" class="flight-bar hidden"></div>
+
+  <div class="screen">
+    <div id="screen0">
+      <h2>Select Airline</h2>
+      <button class="btn" onclick="setAirline('indigo')">IndiGo</button>
+      <button class="btn red" onclick="setAirline('airindia')">Air India</button>
+    </div>
+
+    <div id="screen1" class="hidden">
+      <h2>✈️ Welcome</h2>
+      <button class="btn" onclick="goTo('screen2')">Start Check-In</button>
+    </div>
+
+    <div id="screen2" class="hidden">
+      <h2>Passenger Identification</h2>
+      <button class="btn" onclick="goTo('screen2b')">Enter PNR</button>
+      <button class="btn secondary" onclick="goTo('screen3')">Scan Boarding Pass</button>
+    </div>
+
+    <div id="screen2b" class="hidden">
+      <h2>Enter PNR</h2>
+      <input id="pnr" placeholder="Enter PNR" />
+      <button class="btn" onclick="verifyPNR()">Continue</button>
+    </div>
+
+    <div id="screen3" class="hidden">
+      <h2>Passport Scan</h2>
+      <div class="card">📘 Passport Scanned Successfully</div>
+      <button class="btn" onclick="confirmPassenger()">Confirm Passenger</button>
+    </div>
+
+    <div id="screen4" class="hidden">
+      <h2>Select Seat</h2>
+      <select id="seat">
+        <option>Window (12A)</option>
+        <option>Middle (12B)</option>
+        <option>Aisle (12C)</option>
+      </select>
+      <button class="btn" onclick="goTo('screen5')">Continue</button>
+    </div>
+
+    <div id="screen5" class="hidden">
+      <h2>Baggage</h2>
+      <select id="baggage">
+        <option value="0">No Check-in Baggage</option>
+        <option value="15">1 Bag (15kg)</option>
+        <option value="30">2 Bags (30kg)</option>
+        <option value="35">Overweight Bag (35kg)</option>
+      </select>
+      <button class="btn" onclick="checkBaggage()">Confirm Baggage</button>
+    </div>
+
+    <div id="screen6" class="hidden">
+      <h2>Prohibited Items</h2>
+      <ul>
+        <li>🔪 Sharp objects</li>
+        <li>🔥 Flammable items</li>
+        <li>🔋 Loose lithium batteries</li>
+        <li>💣 Explosives / replicas</li>
+        <li>🧴 Liquids above 100ml</li>
+      </ul>
+      <button class="btn secondary" onclick="goTo('screen7')">I Understand</button>
+    </div>
+
+    <div id="screen7" class="hidden">
+      <h2>Check-In Complete</h2>
+      <div class="card" id="bpPreview"></div>
+      <div class="card" id="bagPreview"></div>
+      <button class="btn" onclick="goTo('screen8')">Proceed to Security</button>
+    </div>
+
+    <div id="screen8" class="hidden">
+      <h2>Proceed to Security</h2>
+      <div class="card">✔ Check-in successful<br>➜ Carry ID & Boarding Pass<br>✈️ Have a pleasant journey</div>
+      <button class="btn secondary" onclick="location.reload()">New Passenger</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let airline = 'IndiGo Airlines';
+let flightCode = '6E 512';
+let flightTerminal = 'T1';
+let flightGate = 'B12';
+let departureTime = '10:45 AM';
+let arrivalTime = '12:50 PM';
+
+function setAirline(type) {
+  const brand = document.getElementById('brand');
+  airline = type === 'airindia' ? 'Air India' : 'IndiGo Airlines';
+  flightCode = type === 'airindia' ? 'AI 202' : '6E 512';
+  brand.textContent = airline;
+  brand.className = 'brand ' + (type === 'airindia' ? 'airindia' : 'indigo');
+  goTo('screen1');
+}
+
+function goTo(id) {
+  document.querySelectorAll('.screen > div').forEach(d => d.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function verifyPNR() {
+  if (pnr.value.length < 4) return alert('Invalid PNR');
+  goTo('screen3');
+}
+
+function confirmPassenger() {
+  document.getElementById('flightBar').textContent = `${airline} | ${flightCode} | Terminal: ${flightTerminal} | Gate: ${flightGate} | Departure: ${departureTime} | Arrival: ${arrivalTime}`;
+  document.getElementById('flightBar').classList.remove('hidden');
+  goTo('screen4');
+}
+
+function checkBaggage() {
+  const weight = Number(baggage.value);
+  if (weight > 30) {
+    alert('⚠️ Overweight baggage detected! Please reduce weight or pay excess at counter.');
+    return;
+  }
+  goTo('screen6');
+}
+
+function populatePreview() {
+  bpPreview.innerHTML = `<strong>Boarding Pass (Preview)</strong><br>
+    Airline: ${airline}<br>
+    Flight: ${flightCode}<br>
+    Terminal: ${flightTerminal}<br>
+    Gate: ${flightGate}<br>
+    Route: DEL → BOM<br>
+    Departure: ${departureTime}<br>
+    Arrival: ${arrivalTime}<br>
+    Seat: ${seat.value}`;
+
+  bagPreview.innerHTML = `<strong>Baggage Tag (Preview)</strong><br>
+    Passenger: Demo User<br>
+    Weight: ${baggage.value} kg`;
+}
+
+const observer = new MutationObserver(() => {
+  if (!screen7.classList.contains('hidden')) populatePreview();
+});
+observer.observe(document.querySelector('.screen'), { attributes: true, subtree: true });
+</script>
+</body>
+</html>
