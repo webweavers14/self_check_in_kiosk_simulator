@@ -1,0 +1,1 @@
+# self_check_in_kiosk_simulator
